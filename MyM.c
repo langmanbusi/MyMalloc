@@ -9,8 +9,8 @@
 #include "MyM.h"
 
 // 创建未使用和已使用列表里的头地址为空
-static Header *_head_free = NULL;
-static Header *_head_used = NULL;
+static char *_head_free = NULL;
+static char *_head_used = NULL;
 
 // 全局线程表
 static ThreadTable *_thread_tbl = NULL;
@@ -60,19 +60,21 @@ static int remove_block(char *block, char **list)
 			*list = NULL;
 		else
 			*list = h_ptr->next;
-			blk = (Header *)*list;
-			blk->prev = NULL;
 		return 0;
 	}
 
 	// 删除块
 	while (h_ptr->next != block) {
+
 		if (!h_ptr->next)
 			return 1;
+
 		h_ptr = (Header *)h_ptr->next;
 	}
+
 	h_ptr->next = ((Header *)h_ptr->next)->next;
 	((Header *)h_ptr->next)->prev = (char *)h_ptr;
+
 	return 0;
 }
 
@@ -91,7 +93,7 @@ static void * split(char *block, size_t bytes, char *free)
 	size_t block_size;
 	size_t block2_size;
 	Header *h_ptr;
-	Header *h_ptr_2;
+	Header b2header;
 	size_t offset;
 
 	h_ptr = (Header *)block;
@@ -120,11 +122,11 @@ static void * split(char *block, size_t bytes, char *free)
 	h_ptr->prev = NULL;
 	h_ptr->size = block_size - block2_size - sizeof(Header);
 
-	h_ptr_2->next = NULL;
-	h_ptr_2->prev = NULL;
-	h_ptr_2->size = block2_size - sizeof(Header);
+	b2header.next = NULL;
+	b2header.prev = NULL;
+	b2header.size = block2_size - sizeof(Header);
 
-	memcpy(block2, h_ptr_2, sizeof(Header));
+	memcpy(block2, &b2header, sizeof(Header));
 
 	// 把这两个分开的块还放进free列表里
 	add_block(block, &free);
@@ -144,9 +146,10 @@ static void * find_block(size_t bytes, char *free)
 	// 检查所有的块，如果有合适的，就分解一下，就在这一步产生了碎片
 	h_ptr = (Header *)free;
 	while (h_ptr) {
-		if (h_ptr->size >= bytes)
+		if (h_ptr->size >= bytes){
 			return split((char *)h_ptr, bytes, free);
-
+			//printf("splitfinish");
+		}
 		h_ptr = (Header *)h_ptr->next;
 	}
 
@@ -165,7 +168,7 @@ static void * find_block(size_t bytes, char *free)
 	// 设置控制块
 	h_ptr = (Header *)mem;
 	h_ptr->next = NULL;
-	h_ptr->prev = NULL;
+	// h_ptr->prev = NULL;
 	h_ptr->size = numbytes - sizeof(Header);
 
 	// 把这个块放进free列表，其实放进了整页
@@ -198,7 +201,6 @@ void list_free(int j)
 
 		h_ptr = (Header *)h_ptr->next;
 	}
-}
 }
 
 // 输出一下used列表
@@ -302,7 +304,7 @@ void * MyMalloc(size_t bytes)
 
 	// 放进已使用列表中
 	h_ptr->next = NULL;
-	h_ptr->free = 0;
+	// h_ptr->free = 0;
 	add_block((char *)h_ptr, &_thread_tbl[i].used);
 
 	// 把对应的free和used列表首地址给对应变量
@@ -341,7 +343,7 @@ void * realloc(void *ptr, size_t bytes)
 
 	memcpy(new_mem, ptr, bytes);
 
-	free(ptr);
+	Myfree(ptr);
 
 	return new_mem;
 }
@@ -358,13 +360,14 @@ void coalesce(char *ptr, char **list)
 	// 如果有下一块且为free
     if (prv) {
 		size = prv->size;
-		printf("22\n");
+		printf("合并\n");
 
 		// 把下一块从list里删除
 		remove_block((char *)prv, list);
 
 		// 把当前块的大小更新
 		current_header->size += size;
+		current_header->prev = NULL;
 	}
 	
 }
@@ -393,7 +396,7 @@ void Myfree(void *ptr)
 		// 如果不是，就判断是否是空闲，是的话上锁
 		else if (_thread_tbl[i].id == -1) {
 			if (pthread_mutex_lock(&_mutex)) {
-				return NULL;
+				return;
 			}
 
 			// 把另外调用函数的线程ID加进来

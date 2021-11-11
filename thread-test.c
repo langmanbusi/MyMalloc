@@ -4,50 +4,50 @@
 #include <sys/syscall.h>
 #include <stdio.h>
 
-#include "myalloc.h"
+#include "MyM.h"
 
 void *p1, *p2, *p3, *p4, *p5, *p6;
 
 void *func() {
 	printf("Inside thread 1\n");
-	void *p = malloc(60);
-	void *p8 = malloc(800);
-	void *p9 = malloc(900);
-	void *p10 = malloc(1000);
-	void *p11 = malloc(1100);
-	free(p8);
+	void *p = MyMalloc(60);
+	void *p8 = MyMalloc(800);
+	void *p9 = MyMalloc(900);
+	void *p10 = MyMalloc(1000);
+	void *p11 = MyMalloc(1100);
+	Myfree(p8);
 	printf("-----Thread 1 Done----\n");
 	return NULL;
 }
 
 void *func1() {
 	printf("Inside thread 2\n");
-	void *p1 = malloc(100);
-	void *p2 = malloc(200);
-	void *p3 = malloc(300);
-	void *p4 = malloc(400);
-	void *p5 = malloc(500);
-	void *p6 = malloc(600);
-	free(p1);
-	free(p2);
-	free(p5);
-	void *p7 = malloc(200);
+	void *p1 = MyMalloc(100);
+	void *p2 = MyMalloc(200);
+	void *p3 = MyMalloc(300);
+	void *p4 = MyMalloc(400);
+	void *p5 = MyMalloc(500);
+	void *p6 = MyMalloc(600);
+	Myfree(p1);
+	Myfree(p2);
+	Myfree(p5);
+	void *p7 = MyMalloc(200);
 	/*
 	
 	list_free();
 	list_used();
-	//free(p1);
-	//free(p2);
-	//void *p31 = malloc(100);
-	//free(p5);
-	//void *p32 = malloc(200);
-	//free(p3);*/
+	//Myfree(p1);
+	//Myfree(p2);
+	//void *p31 = MyMalloc(100);
+	//Myfree(p5);
+	//void *p32 = MyMalloc(200);
+	//Myfree(p3);*/
 	printf("-----Thread 2 Done----\n");
 	return NULL;
 }
 
 void *func2() {
-	void *p7 = malloc(500);
+	void *p7 = MyMalloc(500);
 	return NULL;
 }
 

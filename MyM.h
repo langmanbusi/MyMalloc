@@ -1,6 +1,7 @@
 #pragma once
 #ifndef __MYM_H__
 #define __MYM_H__
+#define NUM 1
 
 #include <pthread.h>
 
@@ -10,7 +11,7 @@ typedef struct _Header
 	char *next;		// 下一块地址
 	char *prev;		// 前一块地址
 	size_t size;	// 大小
-	unsigned int free = 1；// free标志
+	// unsigned int free = 1；// free标志
 } __attribute__ ((aligned(8))) Header;
 
 // 线程表块
