@@ -5,4 +5,4 @@ linux报告
 
 运行./test即可，或者自己更改代码后运行gcc thread-test.c MyM.c -o test -lpthread。
 
-因为本人初学，不会用makefile，就没有。
+因为本人初学，不会用makefile，就没有写。。
